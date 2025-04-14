@@ -3,30 +3,13 @@
 
 let
   bootstrap = import ((builtins.fetchTree { type = "path"; path = "/nix/store/j8si7r4fdnajf2q6f4bkqgfpwjccfwpa-source"; narHash = "sha256-pCglMme56MWxtTNRWrLj55/eJXw4dX4HmZYXUm6+DO4="; })) { inherit system; };
-  codedownPinned = import (bootstrap.fetchFromGitHub {
-    owner = "codedownio";
-    repo = "codedown-languages";
-    rev = "11cd186b89f73c15b842d6e7e44531a2cdd41816"; # codedown-languages-rev
-    hash = "sha256-K+Mpd+7/Rozhb5mwzXDlhOeMPjF90CXU2AbvYPqvPKc="; # codedown-languages-hash
-  }) { inherit system; inherit (bootstrap) fetchFromGitHub; };
 
-  channels = {
-    channel9 = bootstrap.fetchgit {
-      url = "https://github.com/codedownio/codedown-languages.git";
-      rev = "d77863f14b5123c97c8044f0e255a8c44bb68b82";
-      hash = "sha256-9TaDcid3PiXhp2Eq2EJQ6aegK5qYXjSmKNqu2+eiNkg=";
-    };
+  channelSrc = bootstrap.fetchgit {
+    url = "https://github.com/codedownio/codedown-languages.git";
+    rev = "d77863f14b5123c97c8044f0e255a8c44bb68b82";
+    hash = "sha256-9TaDcid3PiXhp2Eq2EJQ6aegK5qYXjSmKNqu2+eiNkg=";
   };
-
-  overlays = [codedownPinned.nixpkgsOverlay];
-  importedChannels = builtins.mapAttrs (name: value: let imported = import value; in
-    if (builtins.isFunction imported && builtins.hasAttr "isCodeDown" (builtins.functionArgs imported)) then imported { inherit system; inherit (bootstrap) fetchFromGitHub; }
-    else if (builtins.isFunction imported && builtins.hasAttr "overlays" (builtins.functionArgs imported)) then imported { inherit overlays system; }
-    else if (builtins.isFunction imported) then imported { inherit system; }
-    else imported
-  ) channels;
-
-  symlinkJoin = bootstrap.symlinkJoin;
+  channel = import channelSrc { inherit system; inherit (bootstrap) fetchFromGitHub; };
 
 in
 
@@ -34,22 +17,16 @@ let
   getPkgs = c: builtins.filter (x: x != null) [(c.pkgsStableSrc or null) (c.pkgsMasterSrc or null)];
   paths = (
   [
-      (bootstrap.fetchFromGitHub {
-        owner = "NixOS";
-        repo = "nixpkgs";
-        rev = "fdfc4347e915779fe00aca31012e23941b6cd610";
-        hash = "sha256-pCglMme56MWxtTNRWrLj55/eJXw4dX4HmZYXUm6+DO4=";
-      })
       ((builtins.fetchTree { type = "path"; path = "/nix/store/j8si7r4fdnajf2q6f4bkqgfpwjccfwpa-source"; narHash = "sha256-pCglMme56MWxtTNRWrLj55/eJXw4dX4HmZYXUm6+DO4="; }))
   ] ++ [
-      (importedChannels.channel9.makeEnvironment {
+      (channel.makeEnvironment {
         kernels.rust.enable = true;
         kernels.rust.lsp.rust-analyzer.enable = false;
         kernels.rust.packages = ["serde" "serde_json"];
       })
   ]
-  ++ (builtins.attrValues channels)
-  ++ (builtins.concatMap getPkgs (builtins.attrValues importedChannels))
+  ++ [channelSrc]
+  ++ (builtins.concatMap getPkgs [channel])
   );
 in
 bootstrap.mkBinaryCache {
