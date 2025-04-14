@@ -13,6 +13,8 @@ cleanup() {
 trap cleanup EXIT
 
 cp -r store-template/* "$STORE"
+chmod u+w "$STORE/nix" "$STORE/nix/store" "$STORE/bin"
+chmod -R u+w "$STORE/nix/var"
 
 /nix/store/03i1p74cdy9scviyzfggza77p5j8bssx-server-static-with-deps-env/bin/bwrap \
   --dev /dev \
@@ -36,7 +38,7 @@ cp -r store-template/* "$STORE"
   --ro-bind "$STORE/bin" /bin0 \
   --ro-bind ./terminfo /etc/terminfo \
   --ro-bind /etc/resolv.conf /etc/resolv.conf \
-  --ro-bind ./binary-cache /binary-substituter-0 \
+  --ro-bind /nix/store/vcnr5zi809gmf3jxpxxnbsvpz8phkwyf-binary-cache /binary-substituter-0 \
   --ro-bind ./nixpkgs-slim /bootstrap-nixpkgs \
   --ro-bind "$(pwd)/expr.nix" /expr.nix \
   nix build \

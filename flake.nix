@@ -4,12 +4,15 @@
     url = "github:hercules-ci/gitignore.nix";
     inputs.nixpkgs.follows = "nixpkgs";
   };
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/master";
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/fdfc4347e915779fe00aca31012e23941b6cd610";
 
   outputs = { self, flake-utils, gitignore, nixpkgs }:
     flake-utils.lib.eachSystem ["x86_64-linux"] (system:
       let
         pkgs = import nixpkgs { inherit system; };
+
+        nixToUse = pkgs.nix;
+        # nixToUse = pkgs.nixVersions.nix_2_25;
 
         bashStatic = with pkgs; runCommand "bash-static" { allowedReferences = [ pkgsStatic.ncurses pkgsStatic.bashInteractive ]; } ''
           mkdir -p $out/bin
@@ -20,7 +23,7 @@
         contents = with pkgs; [
           bashStatic
           git
-          nix
+          nixToUse
         ];
 
         store-template = with pkgs; runCommand "store-template" {} ''
@@ -34,7 +37,7 @@
 
           mkdir -p $out/nix/var/nix
           export NIX_STATE_DIR=$out/nix/var/nix
-          ${nix}/bin/nix-store --load-db < ${closureInfo { rootPaths = contents; }}/registration
+          ${nixToUse}/bin/nix-store --load-db < ${closureInfo { rootPaths = contents; }}/registration
 
           mkdir -p $out/nix/var/nix/gcroots
 
@@ -45,10 +48,12 @@
           for f in ${git}/bin/*; do
             ln -s $f $out/bin/$(basename "$f")
           done
-          for f in ${nix}/bin/*; do
+          for f in ${nixToUse}/bin/*; do
             ln -s $f $out/bin/$(basename "$f")
           done
         '';
+
+        # store-template = ./store-template;
 
         binary-cache = import ./binary-cache.nix { inherit system; bootstrap = pkgs; };
 
@@ -88,10 +93,10 @@
                 --setenv PATH "/bin" \
                 --bind "$STORE/nix" /nix \
                 --ro-bind ${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt /etc/ssl/certs/ca-certificates.crt \
-                --ro-bind "$STORE/bin" /bin \
+                --ro-bind "${./nix_bin}" /bin \
                 --ro-bind /etc/resolv.conf /etc/resolv.conf \
-                --ro-bind ${binary-cache} /binary-substituter-0 \
-                --ro-bind ${pkgs.path} /bootstrap-nixpkgs \
+                --ro-bind /nix/store/vcnr5zi809gmf3jxpxxnbsvpz8phkwyf-binary-cache /binary-substituter-0 \
+                --ro-bind ./nixpkgs-slim /bootstrap-nixpkgs \
                 --ro-bind ${./expr.nix} /expr.nix \
                 nix build \
                 --arg system $'"x86_64-linux"' \
@@ -104,6 +109,10 @@
                 --option max-jobs 1 \
                 --debug -v
             '';
+
+            inherit nixToUse;
+
+            nixStatic = pkgs.pkgsStatic.nix;
           };
         }
     );
