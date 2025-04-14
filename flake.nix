@@ -56,7 +56,7 @@
 
         # store-template = ./store-template;
 
-        binary-cache = import ./binary-cache.nix { inherit system; bootstrap = pkgs; };
+        binary-cache = import ./binary-cache.nix { inherit system; };
 
         nixStatic_228 = nix.outputs.packages.${system}.nix-cli-static;
 
@@ -97,7 +97,7 @@
                 --ro-bind ${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt /etc/ssl/certs/ca-certificates.crt \
                 --ro-bind "${nixStatic_228}/bin" /bin \
                 --ro-bind /etc/resolv.conf /etc/resolv.conf \
-                --ro-bind /nix/store/vcnr5zi809gmf3jxpxxnbsvpz8phkwyf-binary-cache /binary-substituter-0 \
+                --ro-bind ${binary-cache} /binary-substituter-0 \
                 --ro-bind ./nixpkgs-slim /bootstrap-nixpkgs \
                 --ro-bind ${./expr.nix} /expr.nix \
                 nix build \
