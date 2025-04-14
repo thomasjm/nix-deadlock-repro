@@ -64,6 +64,8 @@
         {
           packages = {
             go = pkgs.writeShellScriptBin "nix-deadlock-repro.sh" ''
+              #!/usr/bin/env bash
+
               # Make a fresh store to test with
               STORE=$(mktemp -d store.XXXXXXXXXX)
 
@@ -74,10 +76,6 @@
               }
               trap cleanup EXIT
 
-              cp -r ${store-template}/* "$STORE"
-              chmod u+w "$STORE/nix" "$STORE/nix/store" "$STORE/bin"
-              chmod -R u+w "$STORE/nix/var"
-
               ${pkgs.bubblewrap}/bin/bwrap \
                 --dev /dev \
                 --proc /proc \
@@ -87,14 +85,15 @@
                 --setenv USER user \
                 --tmpfs /build-home \
                 --setenv HOME /build-home \
-                --setenv NIX_CONF_DIR /nix/etc/nix \
+                --ro-bind ${./nix.conf} /nix_conf/nix.conf \
+                --setenv NIX_CONF_DIR /nix_conf \
                 --setenv LANG en_US.UTF-8 \
                 --setenv LC_CTYPE en_US.UTF-8 \
                 --setenv NIX_SSL_CERT_FILE /etc/ssl/certs/ca-certificates.crt \
                 --setenv CURL_CA_BUNDLE /etc/ssl/certs/ca-certificates.crt \
                 --setenv TERM xterm-256color \
                 --setenv PATH "/bin" \
-                --bind "$STORE/nix" /nix \
+                --bind "$STORE" /nix \
                 --ro-bind ${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt /etc/ssl/certs/ca-certificates.crt \
                 --ro-bind "${nixStatic_228}/bin" /bin \
                 --ro-bind /etc/resolv.conf /etc/resolv.conf \
@@ -113,7 +112,7 @@
                 --debug -v
             '';
 
-            inherit nixToUse;
+            inherit nixToUse store-template;
           };
         }
     );
