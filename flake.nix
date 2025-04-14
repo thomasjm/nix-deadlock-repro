@@ -20,6 +20,7 @@
         contents = with pkgs; [
           bashStatic
           git
+          nix
         ];
 
         store-template = with pkgs; runCommand "store-template" {} ''
@@ -42,6 +43,9 @@
             ln -s $f $out/bin/$(basename "$f")
           done
           for f in ${git}/bin/*; do
+            ln -s $f $out/bin/$(basename "$f")
+          done
+          for f in ${nix}/bin/*; do
             ln -s $f $out/bin/$(basename "$f")
           done
         '';
@@ -81,15 +85,14 @@
                 --setenv NIX_SSL_CERT_FILE /etc/ssl/certs/ca-certificates.crt \
                 --setenv CURL_CA_BUNDLE /etc/ssl/certs/ca-certificates.crt \
                 --setenv TERM xterm-256color \
-                --setenv PATH $'/bin:/bin0' \
+                --setenv PATH "/bin" \
                 --bind "$STORE/nix" /nix \
                 --ro-bind ${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt /etc/ssl/certs/ca-certificates.crt \
-                --ro-bind ${pkgs.nix}/bin /bin \
-                --ro-bind "$STORE/bin" /bin0 \
+                --ro-bind "$STORE/bin" /bin \
                 --ro-bind /etc/resolv.conf /etc/resolv.conf \
                 --ro-bind ${binary-cache} /binary-substituter-0 \
                 --ro-bind ${pkgs.path} /bootstrap-nixpkgs \
-                --ro-bind "$(pwd)/expr.nix" ${./expr.nix} \
+                --ro-bind ${./expr.nix} /expr.nix \
                 nix build \
                 --arg system $'"x86_64-linux"' \
                 --file /expr.nix \

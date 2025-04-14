@@ -1,7 +1,7 @@
 { system ? builtins.currentSystem }:
 
 let
-  bootstrap = import ((builtins.fetchTree { type = "path"; path = "/bootstrap-nixpkgs"; narHash = "sha256-UQy4h0IUApOxbabFN6zLedi69KcQpj9i2UKaJHTfaOU="; })) { inherit system; };
+  bootstrap = import ((builtins.fetchTree { type = "path"; path = "/bootstrap-nixpkgs"; narHash = "sha256-J4GNPbrUySbLvgohdJCWqzme04vFLhiHTYr1Ur8si7M="; })) { inherit system; };
   # bootstrap = import ((builtins.fetchTree { type = "path"; path = "/home/tom/tools/nix-deadlock-repro/nixpkgs-slim"; narHash = "sha256-UQy4h0IUApOxbabFN6zLedi69KcQpj9i2UKaJHTfaOU="; })) { inherit system; };
 
   channel0 = import (bootstrap.fetchgit {
