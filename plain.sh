@@ -13,13 +13,15 @@ cleanup() {
 trap cleanup EXIT
 
 cp -r store-template/* "$STORE"
+chmod u+w "$STORE/nix" "$STORE/nix/store" "$STORE/bin"
+chmod -R u+w "$STORE/nix/var"
 
 nix build \
   --arg system $'"x86_64-linux"' \
-  --file ./expr.nix \
+  --file ./expr-plain.nix \
   --store "$STORE" \
-  --extra-substituters $'file:///binary-substituter-0?priority=10&trusted=true' \
-  --extra-trusted-substituters $'file:///binary-substituter-0?priority=10&trusted=true' \
+  --extra-substituters $'file:///nix/store/vcnr5zi809gmf3jxpxxnbsvpz8phkwyf-binary-cache?priority=10&trusted=true' \
+  --extra-trusted-substituters $'file:///nix/store/vcnr5zi809gmf3jxpxxnbsvpz8phkwyf-binary-cache?priority=10&trusted=true' \
   --option always-allow-substitutes true \
   --extra-experimental-features nix-command \
   --extra-experimental-features flakes \

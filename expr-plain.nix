@@ -1,7 +1,7 @@
 { system ? builtins.currentSystem }:
 
 let
-  bootstrap = import ((builtins.fetchTree { type = "path"; path = "/bootstrap-nixpkgs"; narHash = "sha256-8qC/XMLDtIn6GN/x7g4VrtYZVKZRiKLW5DZqtea81j0="; })) { inherit system; };
+  bootstrap = import ((builtins.fetchTree { type = "path"; path = "/home/tom/tools/nix-deadlock-repro/nixpkgs-slim"; narHash = "sha256-8qC/XMLDtIn6GN/x7g4VrtYZVKZRiKLW5DZqtea81j0="; })) { inherit system; };
 
   channel0 = import (bootstrap.fetchgit {
     url = "https://github.com/codedownio/codedown-languages.git";
