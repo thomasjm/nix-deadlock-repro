@@ -1,3 +1,0 @@
-[submodule "nixpkgs-slim"]
-	path = nixpkgs-slim
-	url = git@github.com:codedownio/nixpkgs-slim.git

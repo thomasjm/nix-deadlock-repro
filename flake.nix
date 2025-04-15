@@ -70,8 +70,6 @@
                 --extra-substituters $'file:///binary-substituter-0?priority=10&trusted=true' \
                 --extra-trusted-substituters $'file:///binary-substituter-0?priority=10&trusted=true' \
                 --option always-allow-substitutes true \
-                --extra-experimental-features nix-command \
-                --extra-experimental-features flakes \
                 --option max-jobs 1 \
                 --debug -v
             '');
