@@ -12,10 +12,19 @@
       let
         pkgs = import nixpkgs { inherit system; };
 
-        binary-cache = import ./binary-cache.nix { inherit system; };
+        binary-cache = import ./binary-cache.nix { inherit system; bootstrapSrc = pkgs.path; };
 
         nixStatic_228 = nix.outputs.packages.${system}.nix-cli-static;
 
+        # Run a command inside a bubblewrap container. This:
+        # - Sets up some basic paths like /tmp
+        # - Sets up some common environment variables, including NIX_SSL_CERT_FILE
+        # - Mounts the provided bin directory as "/bin"
+        # - Mounts the binary cache as "/binary-substituter-0"
+        # - Mounts the expr.nix from this repo as "/expr.nix"
+        #
+        # You can try running the Nix build with "nix run .#go",
+        # or open a Bash shell to look around with "nix run .#shell"
         scriptWithBinary = binDir: command: ''
           #!/usr/bin/env bash
 
@@ -78,7 +87,7 @@
                 cp -a ${pkgs.pkgsStatic.coreutils}/bin/* $out
               '';
               in
-                pkgs.writeShellScriptBin "nix-deadlock-repro.sh" (scriptWithBinary binDir "bash");
+                pkgs.writeShellScriptBin "nix-deadlock-repro-shell.sh" (scriptWithBinary binDir "bash");
           };
         }
     );
