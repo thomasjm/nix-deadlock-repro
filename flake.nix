@@ -1,13 +1,9 @@
 {
   inputs.flake-utils.url = "github:numtide/flake-utils";
-  inputs.gitignore = {
-    url = "github:hercules-ci/gitignore.nix";
-    inputs.nixpkgs.follows = "nixpkgs";
-  };
   inputs.nix.url = "github:NixOS/nix/2.28-maintenance";
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/fdfc4347e915779fe00aca31012e23941b6cd610";
 
-  outputs = { self, flake-utils, gitignore, nix, nixpkgs }:
+  outputs = { self, flake-utils, nix, nixpkgs }:
     flake-utils.lib.eachSystem ["x86_64-linux"] (system:
       let
         pkgs = import nixpkgs { inherit system; };
