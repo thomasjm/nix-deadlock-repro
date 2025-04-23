@@ -33,6 +33,13 @@
           }
           trap cleanup EXIT
 
+          echo "Starting HTTP substituter"
+          ${pkgs.python3}/bin/python -m http.server 8888 --directory ${binary-cache} &
+          SERVER_PID=$!
+          trap "echo 'Shutting down Python server with PID $SERVER_PID...'; kill $SERVER_PID; exit" EXIT INT TERM
+          echo "Sleeping 5s"
+          sleep 5
+
           ${pkgs.bubblewrap}/bin/bwrap \
             --dev /dev \
             --proc /proc \
@@ -67,8 +74,8 @@
               nix build \
                 --arg system $'"x86_64-linux"' \
                 --file /expr.nix \
-                --extra-substituters $'file:///binary-substituter-0?priority=10&trusted=true' \
-                --extra-trusted-substituters $'file:///binary-substituter-0?priority=10&trusted=true' \
+                --extra-substituters $'http://localhost:8888?priority=10&trusted=true' \
+                --extra-trusted-substituters $'http://localhost:8888?priority=10&trusted=true' \
                 --option always-allow-substitutes true \
                 --option max-jobs 1 \
                 --debug -v
